@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced To-Do List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a4f7a, #2d1b4e);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        .input-form {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        .input-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .error-message {
+            display: none;
+            color: #e53e3e;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .save-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .todo-list {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 1fr 2fr 100px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .todo-item {
+            display: grid;
+            grid-template-columns: 1fr 2fr 100px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            align-items: center;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+            border-color: #4299e1;
+        }
+
+        .todo-item .title {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .todo-item .description {
+            color: #4a5568;
+        }
+
+        .delete-btn {
+            background: #fc8181;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #e53e3e;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .input-form {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Enhanced To-Do List</h1>
+        
+        <div class="app-container">
+            <div class="input-form">
+                <div class="input-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" placeholder="Enter task title">
+                    <div class="error-message">Please fill out this field.</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Enter task description"></textarea>
+                    <div class="error-message">Please fill out this field.</div>
+                </div>
+                
+                <button class="save-btn">Add Task</button>
+            </div>
+            
+            <div class="todo-list">
+                <div class="list-header">
+                    <div>Title</div>
+                    <div>Description</div>
+                    <div>Actions</div>
+                </div>
+                <div id="tasks-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todos = [];
+
+        function showError(input) {
+            const errorMessage = input.nextElementSibling;
+            errorMessage.style.display = 'block';
+            input.style.borderColor = '#fc8181';
+        }
+
+        function hideError(input) {
+            const errorMessage = input.nextElementSibling;
+            errorMessage.style.display = 'none';
+            input.style.borderColor = '#e2e8f0';
+        }
+
+        function validateInput(input) {
+            if (!input.value.trim()) {
+                showError(input);
+                return false;
+            }
+            hideError(input);
+            return true;
+        }
+
+        function addTodo() {
+            const titleInput = document.getElementById('title');
+            const descInput = document.getElementById('description');
+            
+            const isTitleValid = validateInput(titleInput);
+            const isDescValid = validateInput(descInput);
+            
+            if (!isTitleValid || !isDescValid) return;
+            
+            const todo = {
+                id: Date.now(),
+                title: titleInput.value.trim(),
+                description: descInput.value.trim()
+            };
+            
+            todos.push(todo);
+            renderTodos();
+            
+            titleInput.value = '';
+            descInput.value = '';
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(todo => todo.id !== id);
+            renderTodos();
+        }
+
+        function renderTodos() {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+            
+            todos.forEach(todo => {
+                const todoElement = document.createElement('div');
+                todoElement.className = 'todo-item';
+                todoElement.innerHTML = `
+                    <div class="title">${todo.title}</div>
+                    <div class="description">${todo.description}</div>
+                    <button class="delete-btn" onclick="deleteTodo(${todo.id})">Delete</button>
+                `;
+                container.appendChild(todoElement);
+            });
+        }
+
+        document.querySelector('.save-btn').addEventListener('click', addTodo);
+        
+        document.getElementById('title').addEventListener('input', function() {
+            if (this.value.trim()) hideError(this);
+        });
+        
+        document.getElementById('description').addEventListener('input', function() {
+            if (this.value.trim()) hideError(this);
+        });
+    </script>
+</body>
+</html>
